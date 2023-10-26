@@ -31,13 +31,12 @@
 tree_pred_path = 'data/tree_season_pred.csv'
 non_tree_pred_path = 'data/non_tree_season_pred.csv'
 ltsm_pred_path = 'data/ltsm_season_pred.csv'
-past_results_path = 'data/nba_prepreprocess_data.csv'
+past_results_path = 'data/nba_threeptera_prepreprocess_data.csv'
 votes_data_path = 'data/voter_pred.csv'
 
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-
 
 # Data Loading Functions
 def load_tree_data(path):
@@ -108,11 +107,13 @@ def main():
             selected_team = st.selectbox(f"Who will win {matchup_id}?", group['TEAM_NAME'].tolist())
 
             if st.button(f"Vote for {selected_team}"):
-                if len(st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == selected_team)]) == 0:
-                    new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': selected_team, 'Votes': 1}
-                    st.session_state['votes_data'] = pd.concat([st.session_state['votes_data'], pd.DataFrame([new_row])], ignore_index=True)
-                else:
-                    st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == selected_team) & (st.session_state['votes_data']['Date'] == selected_date), 'Votes'] += 1
+                for team_name in group['TEAM_NAME'].tolist():
+                    new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': team_name, 'Votes': 1 if team_name == selected_team else -1}
+                    
+                    if len(st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == team_name) & (st.session_state['votes_data']['Date'] == selected_date)]) == 0:
+                        st.session_state['votes_data'] = pd.concat([st.session_state['votes_data'], pd.DataFrame([new_row])], ignore_index=True)
+                    else:
+                        st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == team_name) & (st.session_state['votes_data']['Date'] == selected_date), 'Votes'] += new_row['Votes']
 
                 st.session_state['votes_data'].to_csv(votes_data_path, index=False)  # Save to CSV
 
@@ -130,11 +131,18 @@ def main():
         # Merge past results with predictions
         past_data_with_predictions = pd.merge(past_results, all_data, on=['Date', 'TEAM_NAME'], how='left')
         
+        # filter for non none ltsm_PREDICTION
+        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['ltsm_PREDICTION'].notna()]
+
         # Show past data
         st.write(past_data_with_predictions)
         
 if __name__ == "__main__":
     main()
+
+
+
+
 
 
 
