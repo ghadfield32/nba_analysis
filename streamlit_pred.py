@@ -27,17 +27,17 @@
 #unseen data will only pull in data until tomorrow
 # 23_24_season_games_past.csv will provide the actual results for the games that have already been played
 
+# File paths and feature names
+tree_pred_path = 'data/tree_season_pred.csv'
+non_tree_pred_path = 'data/non_tree_season_pred.csv'
+ltsm_pred_path = 'data/ltsm_season_pred.csv'
+past_results_path = 'data/nba_prepreprocess_data.csv'
+votes_data_path = 'data/voter_pred.csv'
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-
-# File paths and feature names
-tree_pred_path = r'C:\Users\ghadf\OneDrive\Desktop\Data Analytics\Python\ML\nba_w_l_prediction_models\nba_analysis\data\tree_season_pred.csv'
-non_tree_pred_path = r'C:\Users\ghadf\OneDrive\Desktop\Data Analytics\Python\ML\nba_w_l_prediction_models\nba_analysis\data\non_tree_season_pred.csv'
-ltsm_pred_path = r'C:\Users\ghadf\OneDrive\Desktop\Data Analytics\Python\ML\nba_w_l_prediction_models\nba_analysis\data\ltsm_season_pred.csv'
-past_results_path = r'C:\Users\ghadf\OneDrive\Desktop\Data Analytics\Python\ML\nba_w_l_prediction_models\nba_analysis\data\nba_prepreprocess_data.csv'
-votes_data_path = r'C:\Users\ghadf\OneDrive\Desktop\Data Analytics\Python\ML\nba_w_l_prediction_models\nba_analysis\data\voter_pred.csv'
 
 # Data Loading Functions
 def load_tree_data(path):
@@ -135,7 +135,6 @@ def main():
         
 if __name__ == "__main__":
     main()
-
 
 
 
