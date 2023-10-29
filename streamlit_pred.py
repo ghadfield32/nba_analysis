@@ -125,16 +125,29 @@ def main():
 
     elif app_mode == "Past Results":
         st.subheader('Past NBA Games and Predictions')
-        #rename GAME_DATE column in past_results to Date
         past_results = past_results.rename(columns={'GAME_DATE': 'Date'})
-
+        
         # Merge past results with predictions
         past_data_with_predictions = pd.merge(past_results, all_data, on=['Date', 'TEAM_NAME'], how='left')
-        
-        # filter for non none ltsm_PREDICTION
-        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['ltsm_PREDICTION'].notna()]
 
-        # Show past data
+        #filter 
+        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['ltsm_PREDICTION'].notna()]
+        
+        # Calculate accuracy for LSTM predictions
+        correct_lstm = sum(past_data_with_predictions['ltsm_PREDICTION'] == past_data_with_predictions['WL_encoded'])
+        total_lstm = len(past_data_with_predictions['ltsm_PREDICTION'].dropna())
+        accuracy_lstm = correct_lstm / total_lstm * 100 if total_lstm != 0 else 0
+        
+        #change the -1's in voter_predictions to 0's
+        past_data_with_predictions['voter_predictions'] = past_data_with_predictions['voter_predictions'].replace(-1,0)
+        # Calculate accuracy for Voter predictions
+        correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL_encoded'])
+        total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
+        accuracy_voter = correct_voter / total_voter * 100 if total_voter != 0 else 0
+        
+        st.write(f"LSTM Prediction Accuracy: {accuracy_lstm}%")
+        st.write(f"Voter Prediction Accuracy: {accuracy_voter}%")
+        
         st.write(past_data_with_predictions)
         
 if __name__ == "__main__":
