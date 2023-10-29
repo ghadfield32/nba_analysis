@@ -108,7 +108,7 @@ def main():
 
             if st.button(f"Vote for {selected_team}"):
                 for team_name in group['TEAM_NAME'].tolist():
-                    new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': team_name, 'Votes': 1 if team_name == selected_team else -1}
+                    new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': team_name, 'Votes': 1 if team_name == selected_team else 0}
                     
                     if len(st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == team_name) & (st.session_state['votes_data']['Date'] == selected_date)]) == 0:
                         st.session_state['votes_data'] = pd.concat([st.session_state['votes_data'], pd.DataFrame([new_row])], ignore_index=True)
@@ -152,18 +152,3 @@ def main():
         
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
