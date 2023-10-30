@@ -1,12 +1,12 @@
-#adding in scheduler for 2am daily so that games can finish and it will start adding in new data/models/predictions at the beginning of the day.
+# Adding in scheduler for 5:15am daily so that games can finish and it will start adding in new data/models/predictions at the beginning of the day.
 name: Run Python Scripts
 
 on:
   push:
     branches: [ main ]
   schedule:
-    # Every day at 2 AM EST (which is 7 AM UTC)
-    - cron: '0 10 * * *'
+    # Every day at 5:15 AM EST (which is 10:15 AM UTC)
+    - cron: '56 10 * * *'
 
 jobs:
   build:
@@ -22,29 +22,31 @@ jobs:
         python-version: '3.9'
 
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Create log files if they do not exist
       run: |
         touch log/success_log.txt
         touch log/error_log.txt
 
-    - name: Run nba_ml_dataset_preprocessing.ipynb
-      run: jupyter nbconvert --execute nba_ml_dataset_preprocessing.ipynb
+    - name: Run nba_ml_dataset_prepreprocessing.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_dataset_prepreprocessing.ipynb --inplace
       id: preprocessing
       continue-on-error: true
 
     - name: Record preprocessing error to log
       if: steps.preprocessing.outcome == 'failure'
-      run: echo "nba_ml_dataset_preprocessing failed" >> error_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing failed" >> error_log.txt
 
     - name: Record preprocessing success to log
       if: steps.preprocessing.outcome == 'success'
-      run: echo "nba_ml_dataset_preprocessing succeeded" >> success_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> success_log.txt
 
     - name: Run future_nba_seasons.ipynb
       if: steps.preprocessing.outcome == 'success'
-      run: jupyter nbconvert --execute future_nba_seasons.ipynb
+      run: jupyter nbconvert --to notebook --execute future_nba_seasons.ipynb --inplace
       id: future_data
       continue-on-error: true
 
@@ -58,7 +60,7 @@ jobs:
 
     - name: Run nba_dl_rnn.ipynb
       if: steps.future_data.outcome == 'success'
-      run: jupyter nbconvert --execute nba_dl_rnn.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_dl_rnn.ipynb --inplace
       id: dl_rnn
       continue-on-error: true
 
@@ -72,7 +74,7 @@ jobs:
 
     - name: Run nba_ml_preprocess_and_binary_nontree.ipynb
       if: steps.dl_rnn.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_nontree.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_preprocess_and_binary_nontree.ipynb --inplace
       id: nontree
       continue-on-error: true
 
@@ -86,7 +88,7 @@ jobs:
 
     - name: Run nba_ml_preprocess_and_binary_tree.ipynb
       if: steps.nontree.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_tree.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_preprocess_and_binary_tree.ipynb --inplace
       id: tree
       continue-on-error: true
 
@@ -102,14 +104,24 @@ jobs:
       if: ${{ failure() }}
       run: |
         git config user.name "GitHub Actions Bot"
+        git config user.email "<your-bot-email@example.com>"
         git add log/error_log.txt
-        git commit -m "Add error log"
-        git push
+        git commit -m "Add error log" || echo "No changes to commit"
+        git push || echo "No changes to push"
 
     - name: Upload success log to GitHub
       if: ${{ success() }}
       run: |
         git config user.name "GitHub Actions Bot"
-        git add success_log.txt
-        git commit -m "Add success log"
-        git push
+        git config user.email "<your-bot-email@example.com>"
+        git add log/success_log.txt
+        git commit -m "Add success log" || echo "No changes to commit"
+        git push || echo "No changes to push"
+        
+    - name: Commit and Push logs
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add log/*  # Add all log files
+        git diff-index --quiet HEAD || (git commit -m "Update logs" --allow-empty)
+        git push || echo "No changes to push"    
