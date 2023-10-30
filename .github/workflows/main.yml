@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 2 AM EST (which is 7 AM UTC)
-    - cron: '0 7 * * *'
+    - cron: '0 10 * * *'
 
 jobs:
   build:
@@ -102,7 +102,7 @@ jobs:
       if: ${{ failure() }}
       run: |
         git config user.name "GitHub Actions Bot"
-        git add error_log.txt
+        git add log/error_log.txt
         git commit -m "Add error log"
         git push
 
