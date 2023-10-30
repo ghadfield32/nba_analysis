@@ -26,8 +26,8 @@ jobs:
 
     - name: Create log files if they do not exist
       run: |
-        touch success_log.txt
-        touch error_log.txt
+        touch log/success_log.txt
+        touch log/error_log.txt
 
     - name: Run nba_ml_dataset_preprocessing.ipynb
       run: jupyter nbconvert --execute nba_ml_dataset_preprocessing.ipynb
