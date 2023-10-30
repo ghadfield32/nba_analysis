@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 5:15 AM EST (which is 10:15 AM UTC)
-    - cron: '43 10 * * *'
+    - cron: '56 10 * * *'
 
 jobs:
   build:
@@ -32,7 +32,7 @@ jobs:
         touch log/error_log.txt
 
     - name: Run nba_ml_dataset_prepreprocessing.ipynb
-      run: jupyter nbconvert --execute nba_ml_dataset_prepreprocessing.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_dataset_prepreprocessing.ipynb --inplace
       id: preprocessing
       continue-on-error: true
 
@@ -46,7 +46,7 @@ jobs:
 
     - name: Run future_nba_seasons.ipynb
       if: steps.preprocessing.outcome == 'success'
-      run: jupyter nbconvert --execute future_nba_seasons.ipynb
+      run: jupyter nbconvert --to notebook --execute future_nba_seasons.ipynb --inplace
       id: future_data
       continue-on-error: true
 
@@ -60,7 +60,7 @@ jobs:
 
     - name: Run nba_dl_rnn.ipynb
       if: steps.future_data.outcome == 'success'
-      run: jupyter nbconvert --execute nba_dl_rnn.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_dl_rnn.ipynb --inplace
       id: dl_rnn
       continue-on-error: true
 
@@ -74,7 +74,7 @@ jobs:
 
     - name: Run nba_ml_preprocess_and_binary_nontree.ipynb
       if: steps.dl_rnn.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_nontree.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_preprocess_and_binary_nontree.ipynb --inplace
       id: nontree
       continue-on-error: true
 
@@ -88,7 +88,7 @@ jobs:
 
     - name: Run nba_ml_preprocess_and_binary_tree.ipynb
       if: steps.nontree.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_tree.ipynb
+      run: jupyter nbconvert --to notebook --execute nba_ml_preprocess_and_binary_tree.ipynb --inplace
       id: tree
       continue-on-error: true
 
