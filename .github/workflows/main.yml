@@ -110,6 +110,6 @@ jobs:
       if: ${{ success() }}
       run: |
         git config user.name "GitHub Actions Bot"
-        git add success_log.txt
+        git add log/success_log.txt
         git commit -m "Add success log"
         git push
