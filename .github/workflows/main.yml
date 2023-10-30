@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 2 AM EST (which is 7 AM UTC)
-    - cron: '0 10 * * *'
+    - cron: '13 10 * * *'
 
 jobs:
   build:
