@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 5:15 AM EST (which is 10:15 AM UTC)
-    - cron: '35 10 * * *'
+    - cron: '43 10 * * *'
 
 jobs:
   build:
@@ -31,18 +31,18 @@ jobs:
         touch log/success_log.txt
         touch log/error_log.txt
 
-    - name: Run nba_ml_dataset_preprocessing.ipynb
-      run: jupyter nbconvert --execute nba_ml_dataset_preprocessing.ipynb
+    - name: Run nba_ml_dataset_prepreprocessing.ipynb
+      run: jupyter nbconvert --execute nba_ml_dataset_prepreprocessing.ipynb
       id: preprocessing
       continue-on-error: true
 
     - name: Record preprocessing error to log
       if: steps.preprocessing.outcome == 'failure'
-      run: echo "nba_ml_dataset_preprocessing failed" >> error_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing failed" >> error_log.txt
 
     - name: Record preprocessing success to log
       if: steps.preprocessing.outcome == 'success'
-      run: echo "nba_ml_dataset_preprocessing succeeded" >> success_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> success_log.txt
 
     - name: Run future_nba_seasons.ipynb
       if: steps.preprocessing.outcome == 'success'
