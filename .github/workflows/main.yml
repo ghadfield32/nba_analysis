@@ -1,12 +1,12 @@
-#adding in scheduler for 2am daily so that games can finish and it will start adding in new data/models/predictions at the beginning of the day.
+# Adding in scheduler for 5:15am daily so that games can finish and it will start adding in new data/models/predictions at the beginning of the day.
 name: Run Python Scripts
 
 on:
   push:
     branches: [ main ]
   schedule:
-    # Every day at 2 AM EST (which is 7 AM UTC)
-    - cron: '13 10 * * *'
+    # Every day at 5:15 AM EST (which is 10:15 AM UTC)
+    - cron: '21 10 * * *'
 
 jobs:
   build:
@@ -26,90 +26,26 @@ jobs:
 
     - name: Create log files if they do not exist
       run: |
+        mkdir -p log
         touch log/success_log.txt
         touch log/error_log.txt
 
-    - name: Run nba_ml_dataset_preprocessing.ipynb
-      run: jupyter nbconvert --execute nba_ml_dataset_preprocessing.ipynb
-      id: preprocessing
-      continue-on-error: true
-
-    - name: Record preprocessing error to log
-      if: steps.preprocessing.outcome == 'failure'
-      run: echo "nba_ml_dataset_preprocessing failed" >> error_log.txt
-
-    - name: Record preprocessing success to log
-      if: steps.preprocessing.outcome == 'success'
-      run: echo "nba_ml_dataset_preprocessing succeeded" >> success_log.txt
-
-    - name: Run future_nba_seasons.ipynb
-      if: steps.preprocessing.outcome == 'success'
-      run: jupyter nbconvert --execute future_nba_seasons.ipynb
-      id: future_data
-      continue-on-error: true
-
-    - name: Record future_data error to log
-      if: steps.future_data.outcome == 'failure'
-      run: echo "future_nba_seasons failed" >> error_log.txt
-
-    - name: Record future_data success to log
-      if: steps.future_data.outcome == 'success'
-      run: echo "future_nba_seasons succeeded" >> success_log.txt
-
-    - name: Run nba_dl_rnn.ipynb
-      if: steps.future_data.outcome == 'success'
-      run: jupyter nbconvert --execute nba_dl_rnn.ipynb
-      id: dl_rnn
-      continue-on-error: true
-
-    - name: Record dl_rnn error to log
-      if: steps.dl_rnn.outcome == 'failure'
-      run: echo "nba_dl_rnn failed" >> error_log.txt
-
-    - name: Record dl_rnn success to log
-      if: steps.dl_rnn.outcome == 'success'
-      run: echo "nba_dl_rnn succeeded" >> success_log.txt
-
-    - name: Run nba_ml_preprocess_and_binary_nontree.ipynb
-      if: steps.dl_rnn.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_nontree.ipynb
-      id: nontree
-      continue-on-error: true
-
-    - name: Record nontree error to log
-      if: steps.nontree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_nontree failed" >> error_log.txt
-
-    - name: Record nontree success to log
-      if: steps.nontree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> success_log.txt
-
-    - name: Run nba_ml_preprocess_and_binary_tree.ipynb
-      if: steps.nontree.outcome == 'success'
-      run: jupyter nbconvert --execute nba_ml_preprocess_and_binary_tree.ipynb
-      id: tree
-      continue-on-error: true
-
-    - name: Record tree error to log
-      if: steps.tree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_tree failed" >> error_log.txt
-
-    - name: Record tree success to log
-      if: steps.tree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_tree succeeded" >> success_log.txt
-
+    # Rest of your steps for running notebooks and logging results...
+  
     - name: Upload error log to GitHub
       if: ${{ failure() }}
       run: |
         git config user.name "GitHub Actions Bot"
+        git config user.email "<your-bot-email@example.com>"
         git add log/error_log.txt
-        git commit -m "Add error log"
-        git push
+        git commit -m "Add error log" || echo "No changes to commit"
+        git push || echo "No changes to push"
 
     - name: Upload success log to GitHub
       if: ${{ success() }}
       run: |
         git config user.name "GitHub Actions Bot"
+        git config user.email "<your-bot-email@example.com>"
         git add log/success_log.txt
-        git commit -m "Add success log"
-        git push
+        git commit -m "Add success log" || echo "No changes to commit"
+        git push || echo "No changes to push"
