@@ -1,4 +1,4 @@
-# Adding in scheduler for 5:15am daily so that games can finish and it will start adding in new data/models/predictions at the beginning of the day.
+# Adding in scheduler for 5:15am daily so that games can finish and it will start adding in new data\models\predictions at the beginning of the day.
 name: Run Python Scripts
 
 on:
@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 5:15 AM EST (which is 10:15 AM UTC)
-    - cron: '41 12 * * *'
+    - cron: '47 12 * * *'
 
 jobs:
   build:
@@ -14,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions\checkout@v2
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v2
+      uses: actions\setup-python@v2
       with:
         python-version: '3.11'
 
@@ -28,84 +28,84 @@ jobs:
 
     - name: Create log files if they do not exist
       run: |
-        touch log/success_log.txt
-        touch log/error_log.txt
+        touch log\success_log.txt
+        touch log\error_log.txt
 
-    - name: Run scheduler_code/nba_ml_dataset_prepreprocessing.py
-      run: python scheduler_code/nba_ml_dataset_prepreprocessing.py >> log/preprocessing_output.txt 2>> log/preprocessing_error.txt
+    - name: Run scheduler_code\nba_ml_dataset_prepreprocessing.py
+      run: python scheduler_code\nba_ml_dataset_prepreprocessing.py >> log\preprocessing_output.txt 2>> log\preprocessing_error.txt
       id: preprocessing
       continue-on-error: true
 
     - name: Record preprocessing error to log
       if: steps.preprocessing.outcome == 'failure'
-      run: echo "nba_ml_dataset_prepreprocessing failed" >> log/error_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing failed" >> log\error_log.txt
 
     - name: Record preprocessing success to log
       if: steps.preprocessing.outcome == 'success'
-      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> log/success_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> log\success_log.txt
 
-    - name: Run scheduler_code/future_nba_seasons.py
+    - name: Run scheduler_code\future_nba_seasons.py
       if: steps.preprocessing.outcome == 'success'
-      run: python scheduler_code/future_nba_seasons.py >> log/future_nba_seasons_output.txt 2>> log/future_nba_seasons_error.txt
+      run: python scheduler_code\future_nba_seasons.py >> log\future_nba_seasons_output.txt 2>> log\future_nba_seasons_error.txt
       id: future_data
       continue-on-error: true
 
     - name: Record future_data error to log
       if: steps.future_data.outcome == 'failure'
-      run: echo "future_nba_seasons failed" >> log/error_log.txt
+      run: echo "future_nba_seasons failed" >> log\error_log.txt
 
     - name: Record future_data success to log
       if: steps.future_data.outcome == 'success'
-      run: echo "future_nba_seasons succeeded" >> log/success_log.txt
+      run: echo "future_nba_seasons succeeded" >> log\success_log.txt
 
-    - name: Run scheduler_code/nba_dl_rnn.py
+    - name: Run scheduler_code\nba_dl_rnn.py
       if: steps.future_data.outcome == 'success'
-      run: python scheduler_code/nba_dl_rnn.py >> log/nba_dl_rnn_output.txt 2>> log/nba_dl_rnn_error.txt
+      run: python scheduler_code\nba_dl_rnn.py >> log\nba_dl_rnn_output.txt 2>> log\nba_dl_rnn_error.txt
       id: dl_rnn
       continue-on-error: true
 
     - name: Record dl_rnn error to log
       if: steps.dl_rnn.outcome == 'failure'
-      run: echo "nba_dl_rnn failed" >> log/error_log.txt
+      run: echo "nba_dl_rnn failed" >> log\error_log.txt
 
     - name: Record dl_rnn success to log
       if: steps.dl_rnn.outcome == 'success'
-      run: echo "nba_dl_rnn succeeded" >> log/success_log.txt
+      run: echo "nba_dl_rnn succeeded" >> log\success_log.txt
 
-    - name: Run scheduler_code/nba_ml_preprocess_and_binary_nontree.py
+    - name: Run scheduler_code\nba_ml_preprocess_and_binary_nontree.py
       if: steps.dl_rnn.outcome == 'success'
-      run: python scheduler_code/nba_ml_preprocess_and_binary_nontree.py >> log/non_tree_output.txt 2>> log/non_tree_error.txt 
+      run: python scheduler_code\nba_ml_preprocess_and_binary_nontree.py >> log\non_tree_output.txt 2>> log\non_tree_error.txt 
       id: nontree
       continue-on-error: true
 
     - name: Record nontree error to log
       if: steps.nontree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_nontree failed" >> log/error_log.txt
+      run: echo "nba_ml_preprocess_and_binary_nontree failed" >> log\error_log.txt
 
     - name: Record nontree success to log
       if: steps.nontree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> log/success_log.txt
+      run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> log\success_log.txt
 
-    - name: Run scheduler_code/nba_ml_preprocess_and_binary_tree.py
+    - name: Run scheduler_code\nba_ml_preprocess_and_binary_tree.py
       if: steps.nontree.outcome == 'success'
-      run: python scheduler_code/nba_ml_preprocess_and_binary_tree.py >> log/tree_output.txt 2>> log/tree_error.txt 
+      run: python scheduler_code\nba_ml_preprocess_and_binary_tree.py >> log\tree_output.txt 2>> log\tree_error.txt 
       id: tree
       continue-on-error: true
 
     - name: Record tree error to log
       if: steps.tree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_tree failed" >> log/error_log.txt
+      run: echo "nba_ml_preprocess_and_binary_tree failed" >> log\error_log.txt
 
     - name: Record tree success to log
       if: steps.tree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_tree succeeded" >> log/success_log.txt
+      run: echo "nba_ml_preprocess_and_binary_tree succeeded" >> log\success_log.txt
 
     - name: Upload error log to GitHub
       if: ${{ failure() }}
       run: |
         git config user.name "GitHub Actions Bot"
         git config user.email "<your-bot-email@example.com>"
-        git add log/error_log.txt
+        git add log\error_log.txt
         git commit -m "Add error log" || echo "No changes to commit"
         git push || echo "No changes to push"
 
@@ -114,7 +114,7 @@ jobs:
       run: |
         git config user.name "GitHub Actions Bot"
         git config user.email "<your-bot-email@example.com>"
-        git add log/success_log.txt
+        git add log\success_log.txt
         git commit -m "Add success log" || echo "No changes to commit"
         git push || echo "No changes to push"
         
@@ -122,6 +122,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add log/*  # Add all log files
+        git add log\*  # Add all log files
         git diff-index --quiet HEAD || (git commit -m "Update logs" --allow-empty)
         git push || echo "No changes to push"    
