@@ -31,8 +31,8 @@ jobs:
         touch log/success_log.txt
         touch log/error_log.txt
 
-    - name: Run scheduler_code/nba_ml_dataset_prepreprocessing.ipynb
-      run: jupyter nbconvert --to notebook --execute scheduler_code/nba_ml_dataset_prepreprocessing.ipynb --inplace
+    - name: Run scheduler_code/nba_ml_dataset_prepreprocessing.py
+      run: python scheduler_code/nba_ml_dataset_prepreprocessing.py
       id: preprocessing
       continue-on-error: true
 
@@ -44,9 +44,9 @@ jobs:
       if: steps.preprocessing.outcome == 'success'
       run: echo "nba_ml_dataset_prepreprocessing succeeded" >> success_log.txt
 
-    - name: Run scheduler_code/future_nba_seasons.ipynb
+    - name: Run scheduler_code/future_nba_seasons.py
       if: steps.preprocessing.outcome == 'success'
-      run: jupyter nbconvert --to notebook --execute scheduler_code/future_nba_seasons.ipynb --inplace
+      run: python scheduler_code/future_nba_seasons.py
       id: future_data
       continue-on-error: true
 
@@ -58,9 +58,9 @@ jobs:
       if: steps.future_data.outcome == 'success'
       run: echo "future_nba_seasons succeeded" >> success_log.txt
 
-    - name: Run scheduler_code/nba_dl_rnn.ipynb
+    - name: Run scheduler_code/nba_dl_rnn.py
       if: steps.future_data.outcome == 'success'
-      run: jupyter nbconvert --to notebook --execute scheduler_code/nba_dl_rnn.ipynb --inplace
+      run: python scheduler_code/nba_dl_rnn.py  
       id: dl_rnn
       continue-on-error: true
 
@@ -72,9 +72,9 @@ jobs:
       if: steps.dl_rnn.outcome == 'success'
       run: echo "nba_dl_rnn succeeded" >> success_log.txt
 
-    - name: Run scheduler_code/nba_ml_preprocess_and_binary_nontree.ipynb
+    - name: Run scheduler_code/nba_ml_preprocess_and_binary_nontree.py
       if: steps.dl_rnn.outcome == 'success'
-      run: jupyter nbconvert --to notebook --execute scheduler_code/nba_ml_preprocess_and_binary_nontree.ipynb --inplace
+      run: python scheduler_code/nba_ml_preprocess_and_binary_nontree.py  
       id: nontree
       continue-on-error: true
 
@@ -86,9 +86,9 @@ jobs:
       if: steps.nontree.outcome == 'success'
       run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> success_log.txt
 
-    - name: Run scheduler_code/nba_ml_preprocess_and_binary_tree.ipynb
+    - name: Run scheduler_code/nba_ml_preprocess_and_binary_tree.py
       if: steps.nontree.outcome == 'success'
-      run: jupyter nbconvert --to notebook --execute scheduler_code/nba_ml_preprocess_and_binary_tree.ipynb --inplace
+      run: python scheduler_code/nba_ml_preprocess_and_binary_tree.py  
       id: tree
       continue-on-error: true
 
