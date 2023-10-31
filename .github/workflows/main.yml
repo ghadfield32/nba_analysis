@@ -6,7 +6,7 @@ on:
     branches: [ main ]
   schedule:
     # Every day at 5:15 AM EST (which is 10:15 AM UTC)
-    - cron: '46 11 * * *'
+    - cron: '29 12 * * *'
 
 jobs:
   build:
@@ -32,73 +32,73 @@ jobs:
         touch log/error_log.txt
 
     - name: Run scheduler_code/nba_ml_dataset_prepreprocessing.py
-      run: python scheduler_code/nba_ml_dataset_prepreprocessing.py
+      run: python scheduler_code/nba_ml_dataset_prepreprocessing.py >> log/preprocessing_output.txt 2>> log/preprocessing_error.txt
       id: preprocessing
       continue-on-error: true
 
     - name: Record preprocessing error to log
       if: steps.preprocessing.outcome == 'failure'
-      run: echo "nba_ml_dataset_prepreprocessing failed" >> error_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing failed" >> log/error_log.txt
 
     - name: Record preprocessing success to log
       if: steps.preprocessing.outcome == 'success'
-      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> success_log.txt
+      run: echo "nba_ml_dataset_prepreprocessing succeeded" >> log/success_log.txt
 
     - name: Run scheduler_code/future_nba_seasons.py
       if: steps.preprocessing.outcome == 'success'
-      run: python scheduler_code/future_nba_seasons.py
+      run: python scheduler_code/future_nba_seasons.py >> log/future_nba_seasons_output.txt 2>> log/future_nba_seasons_error.txt
       id: future_data
       continue-on-error: true
 
     - name: Record future_data error to log
       if: steps.future_data.outcome == 'failure'
-      run: echo "future_nba_seasons failed" >> error_log.txt
+      run: echo "future_nba_seasons failed" >> log/error_log.txt
 
     - name: Record future_data success to log
       if: steps.future_data.outcome == 'success'
-      run: echo "future_nba_seasons succeeded" >> success_log.txt
+      run: echo "future_nba_seasons succeeded" >> log/success_log.txt
 
     - name: Run scheduler_code/nba_dl_rnn.py
       if: steps.future_data.outcome == 'success'
-      run: python scheduler_code/nba_dl_rnn.py  
+      run: python scheduler_code/nba_dl_rnn.py >> log/nba_dl_rnn_output.txt 2>> log/nba_dl_rnn_error.txt
       id: dl_rnn
       continue-on-error: true
 
     - name: Record dl_rnn error to log
       if: steps.dl_rnn.outcome == 'failure'
-      run: echo "nba_dl_rnn failed" >> error_log.txt
+      run: echo "nba_dl_rnn failed" >> log/error_log.txt
 
     - name: Record dl_rnn success to log
       if: steps.dl_rnn.outcome == 'success'
-      run: echo "nba_dl_rnn succeeded" >> success_log.txt
+      run: echo "nba_dl_rnn succeeded" >> log/success_log.txt
 
     - name: Run scheduler_code/nba_ml_preprocess_and_binary_nontree.py
       if: steps.dl_rnn.outcome == 'success'
-      run: python scheduler_code/nba_ml_preprocess_and_binary_nontree.py  
+      run: python scheduler_code/nba_ml_preprocess_and_binary_nontree.py >> log/non_tree_output.txt 2>> log/non_tree_error.txt 
       id: nontree
       continue-on-error: true
 
     - name: Record nontree error to log
       if: steps.nontree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_nontree failed" >> error_log.txt
+      run: echo "nba_ml_preprocess_and_binary_nontree failed" >> log/error_log.txt
 
     - name: Record nontree success to log
       if: steps.nontree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> success_log.txt
+      run: echo "nba_ml_preprocess_and_binary_nontree succeeded" >> log/success_log.txt
 
     - name: Run scheduler_code/nba_ml_preprocess_and_binary_tree.py
       if: steps.nontree.outcome == 'success'
-      run: python scheduler_code/nba_ml_preprocess_and_binary_tree.py  
+      run: python scheduler_code/nba_ml_preprocess_and_binary_tree.py >> log/tree_output.txt 2>> log/tree_error.txt 
       id: tree
       continue-on-error: true
 
     - name: Record tree error to log
       if: steps.tree.outcome == 'failure'
-      run: echo "nba_ml_preprocess_and_binary_tree failed" >> error_log.txt
+      run: echo "nba_ml_preprocess_and_binary_tree failed" >> log/error_log.txt
 
     - name: Record tree success to log
       if: steps.tree.outcome == 'success'
-      run: echo "nba_ml_preprocess_and_binary_tree succeeded" >> success_log.txt
+      run: echo "nba_ml_preprocess_and_binary_tree succeeded" >> log/success_log.txt
 
     - name: Upload error log to GitHub
       if: ${{ failure() }}
