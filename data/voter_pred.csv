@@ -51,3 +51,29 @@ Unnamed: 0,MATCHUP_ID,TEAM_NAME,Votes,Date
 ,LACORL,Orlando Magic,1,2023-10-31
 ,PHXSAS,Phoenix Suns,1,2023-10-31
 ,PHXSAS,San Antonio Spurs,0,2023-10-31
+,ATLWAS,Atlanta Hawks,1,2023-11-01
+,ATLWAS,Washington Wizards,0,2023-11-01
+,BKNMIA,Brooklyn Nets,1,2023-11-01
+,BKNMIA,Miami Heat,0,2023-11-01
+,BOSIND,Indiana Pacers,0,2023-11-01
+,BOSIND,Boston Celtics,1,2023-11-01
+,CHAHOU,Charlotte Hornets,0,2023-11-01
+,CHAHOU,Houston Rockets,1,2023-11-01
+,CHIDAL,Chicago Bulls,0,2023-11-01
+,CHIDAL,Dallas Mavericks,1,2023-11-01
+,CLENYK,Cleveland Cavaliers,0,2023-11-01
+,CLENYK,New York Knicks,1,2023-11-01
+,DENMIN,Denver Nuggets,1,2023-11-01
+,DENMIN,Minnesota Timberwolves,0,2023-11-01
+,DETPOR,Portland Trail Blazers,0,2023-11-01
+,DETPOR,Detroit Pistons,1,2023-11-01
+,GSWSAC,Sacramento Kings,0,2023-11-01
+,GSWSAC,Golden State Warriors,1,2023-11-01
+,LACLAL,LA Clippers,0,2023-11-01
+,LACLAL,Los Angeles Lakers,1,2023-11-01
+,MEMUTA,Memphis Grizzlies,0,2023-11-01
+,MEMUTA,Utah Jazz,1,2023-11-01
+,MILTOR,Milwaukee Bucks,1,2023-11-01
+,MILTOR,Toronto Raptors,0,2023-11-01
+,NOPOKC,Oklahoma City Thunder,0,2023-11-01
+,NOPOKC,New Orleans Pelicans,1,2023-11-01
