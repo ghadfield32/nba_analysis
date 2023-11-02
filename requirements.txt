@@ -9,4 +9,4 @@ torch
 joblib
 streamlit
 nbconvert
-plotly
+plotly_express
