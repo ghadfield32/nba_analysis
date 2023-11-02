@@ -3,10 +3,12 @@ numpy
 seaborn
 matplotlib
 scikit-learn
+plotly
+
 xgboost
 nba_api
 torch
 joblib
 streamlit
 nbconvert
-plotly==5.7.0
+
