@@ -181,7 +181,7 @@ def main():
         all_accuracies = all_accuracies[all_accuracies['Date'] > one_month_ago]
 
         # Create line chart
-        fig = px.line(all_accuracies, x='Date', y='correct_prediction', color='Model', title='Daily Accuracy of Predictions', labels={'correct_prediction': 'Accuracy (%)'})
+        fig = px.line(all_accuracies, x='Date', y='correct_prediction', color='Model', title='Correct Predictions Over Time', labels={'correct_prediction': 'Accuracy (%)'})
         fig.update_yaxes(tickvals=[i for i in range(0, 101, 10)], ticktext=[f'{i}%' for i in range(0, 101, 10)])
         st.plotly_chart(fig)
 
@@ -204,7 +204,7 @@ def main():
         
         # Display accuracies
         st.write(f"LSTM Prediction Accuracy: {accuracy_lstm}%")
-        st.write(f"LSTM (5 Game Memory) Prediction Accuracy: {accuracy_lstm_seq}%")
+        st.write(f"LSTM (5 Game Memory) Prediction Accuracy: {accuracy_lstm_seq}% **Started on 2023-11-01")
         st.write(f"Voter Prediction Accuracy: {accuracy_voter}%")
         
         # Display predictions and results
