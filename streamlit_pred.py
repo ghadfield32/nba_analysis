@@ -205,19 +205,25 @@ def main():
         fig.update_yaxes(tickvals=[i for i in range(0, 101, 10)], ticktext=[f'{i}%' for i in range(0, 101, 10)])
         st.plotly_chart(fig)
 
+        # Update ltsm_PREDICTION, ltsm_seq_PREDICTION, and voter_predictions to 'W' if x == 0, 'L' if x == 1
+        past_data_with_predictions['ltsm_PREDICTION'] = past_data_with_predictions['ltsm_PREDICTION'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
+        past_data_with_predictions['ltsm_seq_PREDICTION'] = past_data_with_predictions['ltsm_seq_PREDICTION'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
+        past_data_with_predictions['voter_predictions'] = past_data_with_predictions['voter_predictions'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
+        #drop WL_encoded column
+        past_data_with_predictions = past_data_with_predictions.drop(columns=['WL_encoded'])
 
         # Calculate accuracy for LSTM predictions
-        correct_lstm = sum(past_data_with_predictions['ltsm_PREDICTION'] == past_data_with_predictions['WL_encoded'])
+        correct_lstm = sum(past_data_with_predictions['ltsm_PREDICTION'] == past_data_with_predictions['WL'])
         total_lstm = len(past_data_with_predictions['ltsm_PREDICTION'].dropna())
         accuracy_lstm = round((correct_lstm / total_lstm * 100) if total_lstm != 0 else 0, 2)
 
         # Calculate accuracy for LSTM sequence predictions
-        correct_lstm_seq = sum(past_data_with_predictions['ltsm_seq_PREDICTION'] == past_data_with_predictions['WL_encoded'])
+        correct_lstm_seq = sum(past_data_with_predictions['ltsm_seq_PREDICTION'] == past_data_with_predictions['WL'])
         total_lstm_seq = len(past_data_with_predictions['ltsm_seq_PREDICTION'].dropna())
         accuracy_lstm_seq = round((correct_lstm_seq / total_lstm_seq * 100) if total_lstm_seq != 0 else 0, 2)
 
         # Calculate accuracy for voter predictions
-        correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL_encoded'])
+        correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL'])
         total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
         accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
         
