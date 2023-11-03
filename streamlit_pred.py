@@ -122,15 +122,35 @@ def main():
             selected_team = st.selectbox(f"Who will win {matchup_id}?", group['TEAM_NAME'].tolist())
 
             if st.button(f"Vote for {selected_team}"):
+                # Iterate through the teams in the matchup
                 for team_name in group['TEAM_NAME'].tolist():
-                    new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': team_name, 'Votes': 1 if team_name == selected_team else 0}
+                    # Record a '0' for the selected team and a '1' for the other team
+                    vote_value = 0 if team_name == selected_team else 1
+                    # Find the existing vote record for this matchup and team
+                    existing_vote = st.session_state['votes_data'].loc[
+                        (st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & 
+                        (st.session_state['votes_data']['TEAM_NAME'] == team_name) & 
+                        (st.session_state['votes_data']['Date'] == selected_date)
+                    ]
                     
-                    if len(st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == team_name) & (st.session_state['votes_data']['Date'] == selected_date)]) == 0:
+                    # Check if the team already has a vote record for this matchup on this date
+                    if existing_vote.empty:
+                        # If no existing vote, append the new row
+                        new_row = {'Date': selected_date, 'MATCHUP_ID': matchup_id, 'TEAM_NAME': team_name, 'Votes': vote_value}
                         st.session_state['votes_data'] = pd.concat([st.session_state['votes_data'], pd.DataFrame([new_row])], ignore_index=True)
                     else:
-                        st.session_state['votes_data'].loc[(st.session_state['votes_data']['MATCHUP_ID'] == matchup_id) & (st.session_state['votes_data']['TEAM_NAME'] == team_name) & (st.session_state['votes_data']['Date'] == selected_date), 'Votes'] += new_row['Votes']
+                        # If vote exists, check if it is the same as before
+                        if existing_vote['Votes'].iloc[0] != vote_value:
+                            # If different, update the vote
+                            st.session_state['votes_data'].loc[existing_vote.index, 'Votes'] = vote_value
+                            st.success(f"Your vote for {team_name} has been updated.")
+                        else:
+                            # If the same, inform the user
+                            st.info(f"You have already voted for {team_name} as {'winning' if vote_value == 0 else 'losing'} this matchup.")
 
-                st.session_state['votes_data'].to_csv(votes_data_path, index=False)  # Save to CSV
+                # Save the updated votes to CSV
+                st.session_state['votes_data'].to_csv(votes_data_path, index=False)
+                st.experimental_rerun()  # Rerun the app to reflect the updated votes
 
             st.write("---")
     
@@ -196,8 +216,7 @@ def main():
         total_lstm_seq = len(past_data_with_predictions['ltsm_seq_PREDICTION'].dropna())
         accuracy_lstm_seq = round((correct_lstm_seq / total_lstm_seq * 100) if total_lstm_seq != 0 else 0, 2)
 
-        # Handle voter predictions (-1's to 0's) and calculate accuracy
-        past_data_with_predictions['voter_predictions'] = past_data_with_predictions['voter_predictions'].replace(-1, 0)
+        # Calculate accuracy for voter predictions
         correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL_encoded'])
         total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
         accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
