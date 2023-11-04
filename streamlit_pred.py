@@ -116,7 +116,7 @@ def main():
 
         for matchup_id, group in grouped:
             for _, matchup in group.iterrows():
-                st.write(f"{matchup['TEAM_NAME']}: LSTM: {matchup['ltsm_PREDICTION']}")
+                st.write(f"{matchup['TEAM_NAME']}: LSTM: {matchup['ltsm_PREDICTION']} LSTM:")
 
             # Voting
             selected_team = st.selectbox(f"Who will win {matchup_id}?", group['TEAM_NAME'].tolist())
@@ -150,7 +150,7 @@ def main():
 
                 # Save the updated votes to CSV
                 st.session_state['votes_data'].to_csv(votes_data_path, index=False)
-                st.experimental_rerun()  # Rerun the app to reflect the updated votes
+                st.rerun()  # Rerun the app to reflect the updated votes
 
             st.write("---")
     
