@@ -121,8 +121,6 @@ def calculate_daily_accuracy(data):
     return daily_accuracy.sort_values(by='Date')
 
 #*******************************chatbot add on***********************************
-# Initialize session state for messages at the top level to ensure it's always done.
-st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
 
 # Set the OpenAI API key.
 openai.api_key = st.secrets["openai_key"]
@@ -130,10 +128,8 @@ openai.api_key = st.secrets["openai_key"]
 # Function to generate initial prompt for the chatbot based on the model's predictions
 def generate_initial_prompt(past_data_with_predictions):
     # You could summarize the data or just take the most recent predictions
-    latest_predictions = past_data_with_predictions.iloc[-1]  # Assuming the latest predictions are at the end
-    prompt = f"Today is {datetime.now().strftime('%Y-%m-%d')}. Here are the latest NBA game predictions: "
-    prompt += f"{latest_predictions['TEAM_NAME']} prediction is {latest_predictions['ltsm_seq_PREDICTION']} based on the Chronos Predictor. "
-    prompt += "What do you think about these predictions?"
+    latest_predictions = past_data_with_predictions
+    prompt = latest_predictions.to_string(index=False)
     return prompt
 
 def chatbot_sidebar(initial_prompt):
@@ -326,6 +322,10 @@ def main():
         correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL'])
         total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
         accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
+
+        total_lstm_seq = total_lstm_seq/2
+        total_lstm = total_lstm/2
+        total_voter = total_voter/2
         
         # In the Man vs Machine section, where you describe the accuracy
         st.subheader('Model Accuracy Insights')
