@@ -130,10 +130,11 @@ openai.api_key = st.secrets["openai_key"]
 # Function to generate initial prompt for the chatbot based on the model's predictions
 def generate_initial_prompt(past_data_with_predictions):
     # You could summarize the data or just take the most recent predictions
-    latest_predictions = past_data_with_predictions.iloc[-1]  # Assuming the latest predictions are at the end
-    prompt = f"Today is {datetime.now().strftime('%Y-%m-%d')}. Here are the latest NBA game predictions: "
-    prompt += f"{latest_predictions['TEAM_NAME']} prediction is {latest_predictions['ltsm_seq_PREDICTION']} based on the Chronos Predictor. "
-    prompt += "What do you think about these predictions?"
+    prompt = "Ask me anything about the NBA!"
+    #latest_predictions = past_data_with_predictions.iloc[-1]  # Assuming the latest predictions are at the end
+    #prompt = f"Today is {datetime.now().strftime('%Y-%m-%d')}. Here are the latest NBA game predictions: "
+    #prompt += f"{latest_predictions['TEAM_NAME']} prediction is {latest_predictions['ltsm_seq_PREDICTION']} based on the Chronos Predictor. "
+    #prompt += "What do you think about these predictions?"
     return prompt
 
 def chatbot_sidebar(initial_prompt):
@@ -327,6 +328,7 @@ def main():
         total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
         accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
 
+        #divide by 2 because there are two teams per game without decimals
         total_lstm_seq = total_lstm_seq/2
         total_lstm = total_lstm/2
         total_voter = total_voter/2
