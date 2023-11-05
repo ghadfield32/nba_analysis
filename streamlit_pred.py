@@ -35,10 +35,41 @@ ltsm_seq_pred_path = 'data/ltsm_seq_season_pred.csv'
 past_results_path = 'data/nba_threeptera_prepreprocess_data.csv'
 votes_data_path = 'data/voter_pred.csv'
 
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import numpy as np
+import openai
+import os
+
+#Take out predictions with the Same value for model so we only track valuable predictions
+def validate_predictions(data):
+    prediction_columns = [
+        'XGBoost_PREDICTION', 'Decision Tree_PREDICTION', 'Random Forest_PREDICTION', 
+        'Gradient Boosting_PREDICTION', 'AdaBoost_PREDICTION', 'MLP Classifier_PREDICTION', 
+        'K-Neighbors Classifier_PREDICTION', 'SVM_PREDICTION', 'SGD Classifier_PREDICTION', 
+        'Ridge Classifier_PREDICTION', 'Logistic Regression_PREDICTION', 'ltsm_PREDICTION', 'ltsm_seq_PREDICTION'
+    ]
+    
+    # Iterate over each prediction column to validate
+    for col in prediction_columns:
+        # Calculate the sum of predictions for each matchup within the column
+        data[f'{col}_sum'] = data.groupby(['Date', 'MATCHUP_ID'])[col].transform('sum')
+        
+        # Identify rows where the sum of predictions is not equal to 1
+        invalid_mask = data[f'{col}_sum'] != 1
+        
+        # Set predictions to NaN for rows where the sum is not 1
+        data.loc[invalid_mask, col] = np.nan
+    
+    # Drop the temporary sum columns
+    sum_columns = [f'{col}_sum' for col in prediction_columns]
+    data = data.drop(columns=sum_columns)
+    
+    return data
+
 
 # Data Loading Functions
 def load_tree_data(path):
@@ -72,10 +103,16 @@ aggregated_votes = votes_data.groupby(['Date', 'MATCHUP_ID', 'TEAM_NAME']).sum()
 
 # Merging function
 def merge_data(tree_data, non_tree_data, ltsm_seq_data, ltsm_data):
+    # Perform the merges as before
     tree_non_tree = pd.merge(tree_data, non_tree_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
     tree_non_tree_ltsm = pd.merge(tree_non_tree, ltsm_seq_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
     all_data = pd.merge(tree_non_tree_ltsm, ltsm_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
-    return pd.merge(all_data, aggregated_votes, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
+    all_data_with_votes = pd.merge(all_data, aggregated_votes, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
+    
+    # Validate predictions before returning
+    validated_data = validate_predictions(all_data_with_votes)
+    return validated_data
+
 
 def calculate_daily_accuracy(data):
     data['correct_prediction'] = data['ltsm_seq_PREDICTION'] == data['WL_encoded']
@@ -83,8 +120,71 @@ def calculate_daily_accuracy(data):
     daily_accuracy['Date'] = pd.to_datetime(daily_accuracy['Date'])
     return daily_accuracy.sort_values(by='Date')
 
+#*******************************chatbot add on***********************************
+# Initialize session state for messages at the top level to ensure it's always done.
+st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
+
+# Set the OpenAI API key.
+openai.api_key = st.secrets["openai_key"]
+
+# Function to generate initial prompt for the chatbot based on the model's predictions
+def generate_initial_prompt(past_data_with_predictions):
+    # You could summarize the data or just take the most recent predictions
+    latest_predictions = past_data_with_predictions.iloc[-1]  # Assuming the latest predictions are at the end
+    prompt = f"Today is {datetime.now().strftime('%Y-%m-%d')}. Here are the latest NBA game predictions: "
+    prompt += f"{latest_predictions['TEAM_NAME']} prediction is {latest_predictions['ltsm_seq_PREDICTION']} based on the Chronos Predictor. "
+    prompt += "What do you think about these predictions?"
+    return prompt
+
+def chatbot_sidebar(initial_prompt):
+    # Initialize session state for chat messages if not already done
+    if "chat_messages" not in st.session_state:
+        st.session_state["chat_messages"] = [{"role": "system", "content": initial_prompt}]
+
+    with st.sidebar:
+        st.title("🏀 NBA Chatbot")
+        # Display previous messages
+        for msg in st.session_state["chat_messages"]:
+            st.text_area(label=msg["role"], value=msg["content"], height=100, disabled=True)
+
+        # User input for the chatbot
+        user_input = st.text_input("Ask the chatbot about the NBA predictions:")
+
+        if user_input:
+            # Append user's message to the messages list
+            st.session_state["chat_messages"].append({"role": "user", "content": user_input})
+
+            # Request a completion from the model (this should be replaced with your own API call)
+            # Note: You'll need to handle API calls and errors appropriately
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=st.session_state["chat_messages"]
+            )
+            response_text = response.choices[0].message["content"].strip()
+
+            # Append the model's response to the messages list
+            st.session_state["chat_messages"].append({"role": "assistant", "content": response_text})
+
+            # Display the response
+            st.text_area(label="Assistant", value=response_text, height=100, disabled=True)
+
+#*******************************chatbot add on***********************************
+
 def main():
     st.title("Man vs Machine: NBA Predictions")
+
+    # Descriptive introduction
+    st.markdown("""
+        Welcome to the NBA Predictions app, where the power of human intuition meets the precision of machine learning. 
+        Here, we feature two unique LSTM-based models:
+        
+        - **Chronos Predictor**: An LSTM model that leverages the sequence of the last 5 games to capture the momentum and dynamics of NBA teams. This model understands that the context of previous games can be vital in determining the outcome of the next game.
+        
+        - **Aeolus Forecaster**: A standard LSTM model that provides predictions based on current game data without the sequence memory of past games. It's named after the Greek deity of wind, symbolizing the swift and dynamic nature of its predictions.
+        
+        Compare these advanced AI predictions with human votes to see if man or machine has the upper hand in predicting the outcomes of NBA games.
+    """)
+
     
     # Load and merge data
     tree_data = load_tree_data(tree_pred_path)
@@ -93,7 +193,6 @@ def main():
     ltsm_seq_data = load_ltsm_seq_data(ltsm_seq_pred_path)
     all_data = merge_data(tree_data, non_tree_data, ltsm_data, ltsm_seq_data)
     past_results = load_past_results(past_results_path)
-    
     # Sidebar for navigation
     app_mode = st.sidebar.selectbox("Choose the app mode", ["Man vs Machine", "All Predictions", "Voter Predictions"])
     
@@ -168,15 +267,16 @@ def main():
         # Merge past results with predictions
         past_data_with_predictions = pd.merge(past_results, all_data, on=['Date', 'TEAM_NAME'], how='left')
 
-        # Filter and sort data
-        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['ltsm_PREDICTION'].notna()]
+        # Filter data since the beginning of the season
+        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['Date'] >= '2023-10-24']
+        #filter data to only include games with a ltsm_seq_PREDICTION
         past_data_with_predictions = past_data_with_predictions.sort_values(by=['Date', 'MATCHUP_ID_x'], ascending=False)
         past_data_with_predictions = past_data_with_predictions.reset_index(drop=True)
 
         # Only include the columns we want
         past_data_with_predictions = past_data_with_predictions[['Date', 'MATCHUP', 'TEAM_NAME', 'WL', 'WL_encoded', 'ltsm_PREDICTION', 
                                                                  'ltsm_seq_PREDICTION', 'voter_predictions']]
-        #print(past_data_with_predictions.head())
+
 
         # Calculate daily accuracy for each prediction model
         def calculate_daily_accuracy(data, prediction_column):
@@ -227,13 +327,21 @@ def main():
         total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
         accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
         
-        # Display accuracies
-        st.write(f"LSTM Prediction Accuracy: {accuracy_lstm}%")
-        st.write(f"LSTM (5 Game Memory) Prediction Accuracy: {accuracy_lstm_seq}% **Started on 2023-11-01")
-        st.write(f"Voter Prediction Accuracy: {accuracy_voter}%")
+        # In the Man vs Machine section, where you describe the accuracy
+        st.subheader('Model Accuracy Insights')
+        st.write(f"**Chronos Predictor** (LSTM with 5 Game Memory) Accuracy: {accuracy_lstm_seq}% out of {total_lstm_seq} games")
+        st.write(f"**Aeolus Forecaster** (Standard LSTM) Accuracy: {accuracy_lstm}% out of {total_lstm} games")
+        st.write(f"**Voter Insights** (Human Predictions) Accuracy: {accuracy_voter}% out of {total_voter} games")
         
         # Display predictions and results
         st.write(past_data_with_predictions)
+
+        # Generate initial prompt for the chatbot
+        initial_prompt = generate_initial_prompt(past_data_with_predictions)
+
+        # Display the chatbot in the sidebar
+        chatbot_sidebar(initial_prompt)
         
 if __name__ == "__main__":
     main()
+
