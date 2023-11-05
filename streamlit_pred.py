@@ -177,9 +177,9 @@ def main():
     # Descriptive introduction
     st.markdown("""
         Welcome to the NBA Predictions app, where the power of human intuition meets the precision of machine learning. 
-        Here, we feature two unique LSTM-based models:
+        Here, we feature two unique Long-Short-Term-Models (LSTM) that predict the outcomes of NBA games.:
         
-        - **Chronos Predictor**: An LSTM model that leverages the sequence of the last 5 games to capture the momentum and dynamics of NBA teams. This model understands that the context of previous games can be vital in determining the outcome of the next game.
+        - **Chronos Predictor**: n LSTM model that leverages the sequence of the last 5 games to capture the momentum and dynamics of NBA teams. This model understands that the context of previous games can be vital in determining the outcome of the next game.
         
         - **Aeolus Forecaster**: A standard LSTM model that provides predictions based on current game data without the sequence memory of past games. It's named after the Greek deity of wind, symbolizing the swift and dynamic nature of its predictions.
         
