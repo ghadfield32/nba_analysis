@@ -10,3 +10,5 @@ joblib
 streamlit
 nbconvert
 plotly
+openai
+os
