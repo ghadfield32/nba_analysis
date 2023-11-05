@@ -126,8 +126,12 @@ def calculate_daily_accuracy(data):
 openai.api_key = st.secrets["openai_key"]
 
 # Function to generate initial prompt for the chatbot based on the model's predictions
-def generate_initial_prompt():
-    prompt = "Welcome to the NBA prediction chatbot! Ask me anything about NBA game predictions and I'll do my best to help you out."
+def generate_initial_prompt(past_data_with_predictions):
+    # You could summarize the data or just take the most recent predictions
+    latest_predictions = past_data_with_predictions.iloc[-1]  # Assuming the latest predictions are at the end
+    prompt = f"Today is {datetime.now().strftime('%Y-%m-%d')}. Here are the latest NBA game predictions: "
+    prompt += f"{latest_predictions['TEAM_NAME']} prediction is {latest_predictions['ltsm_seq_PREDICTION']} based on the Chronos Predictor. "
+    prompt += "What do you think about these predictions?"
     return prompt
 
 def chatbot_sidebar(initial_prompt):
