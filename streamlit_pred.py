@@ -344,6 +344,8 @@ def main():
         st.write(f"**Aeolus Forecaster** (Standard LSTM) Accuracy: {accuracy_lstm}% out of {total_lstm} games")
         st.write(f"**Voter Insights** (Human Predictions) Accuracy: {accuracy_voter}% out of {total_voter} games")
         
+        #rename ltsm_seq_prediction to Chrons Predictor and ltsm_prediction to Aeolus Forecaster
+        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor', 'ltsm_PREDICTION': 'Aeolus Forecaster'})
         # Display predictions and results
         st.write(past_data_with_predictions)
 
