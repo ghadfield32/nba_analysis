@@ -348,8 +348,8 @@ def main():
         past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor'
                                                                                 , 'ltsm_PREDICTION': 'Aeolus Forecaster'
                                                                                 , 'voter_predictions': 'Voter Insights'
-                                                                                ,'lstm_seq_PREDICTION_correct': 'Chronos Predictor Correct'
-                                                                                , 'lstm_PREDICTION_correct': 'Aeolus Forecaster Correct'
+                                                                                ,'ltsm_seq_PREDICTION_correct': 'Chronos Predictor Correct'
+                                                                                , 'ltsm_PREDICTION_correct': 'Aeolus Forecaster Correct'
                                                                                 , 'voter_predictions_correct': 'Voter Insights Correct'})
         
         # Display predictions and results
