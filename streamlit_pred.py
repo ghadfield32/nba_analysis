@@ -345,7 +345,13 @@ def main():
         st.write(f"**Voter Insights** (Human Predictions) Accuracy: {accuracy_voter}% out of {total_voter} games")
         
         #rename ltsm_seq_prediction to Chrons Predictor and ltsm_prediction to Aeolus Forecaster
-        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor', 'ltsm_PREDICTION': 'Aeolus Forecaster'})
+        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor'
+                                                                                , 'ltsm_PREDICTION': 'Aeolus Forecaster'
+                                                                                , 'voter_predictions': 'Voter Insights'
+                                                                                ,'lstm_seq_PREDICTION_correct': 'Chronos Predictor Correct'
+                                                                                , 'lstm_PREDICTION_correct': 'Aeolus Forecaster Correct'
+                                                                                , 'voter_predictions_correct': 'Voter Insights Correct'})
+        
         # Display predictions and results
         st.write(past_data_with_predictions)
 
