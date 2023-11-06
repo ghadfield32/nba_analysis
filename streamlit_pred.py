@@ -103,15 +103,19 @@ aggregated_votes = votes_data.groupby(['Date', 'MATCHUP_ID', 'TEAM_NAME']).sum()
 
 # Merging function
 def merge_data(tree_data, non_tree_data, ltsm_seq_data, ltsm_data):
-    # Perform the merges as before
+    # Perform the merges
     tree_non_tree = pd.merge(tree_data, non_tree_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
     tree_non_tree_ltsm = pd.merge(tree_non_tree, ltsm_seq_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
     all_data = pd.merge(tree_non_tree_ltsm, ltsm_data, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
-    all_data_with_votes = pd.merge(all_data, aggregated_votes, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
     
-    # Validate predictions before returning
-    validated_data = validate_predictions(all_data_with_votes)
-    return validated_data
+    # Validate predictions before merging with votes
+    validated_data = validate_predictions(all_data)
+    
+    # Now merge with votes data
+    all_data_with_votes = pd.merge(validated_data, aggregated_votes, on=['Date', 'MATCHUP_ID', 'TEAM_NAME'], how='left')
+    
+    return all_data_with_votes
+
 
 
 def calculate_daily_accuracy(data):
@@ -179,7 +183,7 @@ def main():
         Welcome to the NBA Predictions app, where the power of human intuition meets the precision of machine learning. 
         Here, we feature two unique Long-Short-Term-Models (LSTM) that predict the outcomes of NBA games.:
         
-        - **Chronos Predictor**: n LSTM model that leverages the sequence of the last 5 games to capture the momentum and dynamics of NBA teams. This model understands that the context of previous games can be vital in determining the outcome of the next game.
+        - **Chronos Predictor**: A LSTM model that leverages the sequence of the last 5 games to capture the momentum and dynamics of NBA teams. This model understands that the context of previous games can be vital in determining the outcome of the next game.
         
         - **Aeolus Forecaster**: A standard LSTM model that provides predictions based on current game data without the sequence memory of past games. It's named after the Greek deity of wind, symbolizing the swift and dynamic nature of its predictions.
         
@@ -253,6 +257,7 @@ def main():
                 st.rerun()  # Rerun the app to reflect the updated votes
 
             st.write("---")
+
     
     elif app_mode == "All Predictions":
         st.subheader('All Predictions')
