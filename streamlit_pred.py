@@ -126,10 +126,10 @@ def calculate_daily_accuracy(data):
 
 #*******************************chatbot add on***********************************
 # Initialize session state for messages at the top level to ensure it's always done.
-st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
+#st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
 
 # Set the OpenAI API key.
-openai.api_key = st.secrets["openai_key"]
+#openai.api_key = st.secrets["openai_key"]
 
 # Function to generate initial prompt for the chatbot based on the model's predictions
 def generate_initial_prompt(past_data_with_predictions):
@@ -356,10 +356,10 @@ def main():
         st.write(past_data_with_predictions)
 
         # Generate initial prompt for the chatbot
-        initial_prompt = generate_initial_prompt(past_data_with_predictions)
+        #initial_prompt = generate_initial_prompt(past_data_with_predictions)
 
         # Display the chatbot in the sidebar
-        chatbot_sidebar(initial_prompt)
+        #chatbot_sidebar(initial_prompt)
         
 if __name__ == "__main__":
     main()
