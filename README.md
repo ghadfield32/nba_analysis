@@ -1,5 +1,5 @@
 # nba_analysis
-Analyzing nba data since the 3 point lines inception (1979-80 season) through machine learning models to learn more about how wins and losses happen.
+Analyzing nba data since the 1984-85 season through training  machine learning models to learn more about how wins and losses happen on that data, while predicting on averages this season based on home vs away.
 Link: nbaanalysis.streamlit.app 
 * This site will show you the overall experiment
 
