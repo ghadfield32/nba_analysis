@@ -177,6 +177,7 @@ NYKSAS,New York Knicks,1,2023-11-08
 NYKSAS,San Antonio Spurs,0,2023-11-08
 PORSAC,Sacramento Kings,0,2023-11-08
 PORSAC,Portland Trail Blazers,1,2023-11-08
+<<<<<<< HEAD
 ATLORL,Orlando Magic,0,2023-11-09
 ATLORL,Atlanta Hawks,1,2023-11-09
 INDMIL,Indiana Pacers,1,2023-11-09
@@ -207,3 +208,5 @@ CLEGSW,Cleveland Cavaliers,1,2023-11-11
 CLEGSW,Golden State Warriors,0,2023-11-11
 MILORL,Orlando Magic,0,2023-11-11
 MILORL,Milwaukee Bucks,1,2023-11-11
+=======
+>>>>>>> 3b2d4116b1f4b8c1952b29c3966018355f699f67
