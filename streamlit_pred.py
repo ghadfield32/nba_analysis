@@ -32,7 +32,7 @@ tree_pred_path = 'data/tree_season_pred.csv'
 non_tree_pred_path = 'data/non_tree_season_pred.csv'
 ltsm_pred_path = 'data/ltsm_season_pred.csv'
 ltsm_seq_pred_path = 'data/ltsm_seq_season_pred.csv'
-past_results_path = 'data/nba_threeptera_prepreprocess_data.csv'
+past_results_path = 'data/23_24_current_season_prediction_tracker.csv'
 votes_data_path = 'data/voter_pred.csv'
 
 
@@ -126,10 +126,10 @@ def calculate_daily_accuracy(data):
 
 #*******************************chatbot add on***********************************
 # Initialize session state for messages at the top level to ensure it's always done.
-st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
+#st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
 
 # Set the OpenAI API key.
-openai.api_key = st.secrets["openai_key"]
+#openai.api_key = st.secrets["openai_key"]
 
 # Function to generate initial prompt for the chatbot based on the model's predictions
 def generate_initial_prompt(past_data_with_predictions):
@@ -273,8 +273,6 @@ def main():
         # Merge past results with predictions
         past_data_with_predictions = pd.merge(past_results, all_data, on=['Date', 'TEAM_NAME'], how='left')
 
-        # Filter data since the beginning of the season
-        past_data_with_predictions = past_data_with_predictions[past_data_with_predictions['Date'] >= '2023-10-24']
         #filter data to only include games with a ltsm_seq_PREDICTION
         past_data_with_predictions = past_data_with_predictions.sort_values(by=['Date', 'MATCHUP_ID_x'], ascending=False)
         past_data_with_predictions = past_data_with_predictions.reset_index(drop=True)
@@ -345,15 +343,21 @@ def main():
         st.write(f"**Voter Insights** (Human Predictions) Accuracy: {accuracy_voter}% out of {total_voter} games")
         
         #rename ltsm_seq_prediction to Chrons Predictor and ltsm_prediction to Aeolus Forecaster
-        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor', 'ltsm_PREDICTION': 'Aeolus Forecaster'})
+        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor'
+                                                                                , 'ltsm_PREDICTION': 'Aeolus Forecaster'
+                                                                                , 'voter_predictions': 'Voter Insights'
+                                                                                ,'ltsm_seq_PREDICTION_correct': 'Chronos Predictor Correct'
+                                                                                , 'ltsm_PREDICTION_correct': 'Aeolus Forecaster Correct'
+                                                                                , 'voter_predictions_correct': 'Voter Insights Correct'})
+        
         # Display predictions and results
         st.write(past_data_with_predictions)
 
         # Generate initial prompt for the chatbot
-        initial_prompt = generate_initial_prompt(past_data_with_predictions)
+        #initial_prompt = generate_initial_prompt(past_data_with_predictions)
 
         # Display the chatbot in the sidebar
-        chatbot_sidebar(initial_prompt)
+        #chatbot_sidebar(initial_prompt)
         
 if __name__ == "__main__":
     main()
