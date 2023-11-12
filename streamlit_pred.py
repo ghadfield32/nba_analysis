@@ -131,6 +131,7 @@ st.session_state.setdefault("messages", [{"role": "system", "content": "Warming 
 # Set the OpenAI API key.
 openai.api_key = st.secrets["openai_key"]
 
+
 # Function to generate initial prompt for the chatbot based on the model's predictions
 def generate_initial_prompt(past_data_with_predictions):
     # You could summarize the data or just take the most recent predictions
