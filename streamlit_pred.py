@@ -34,12 +34,15 @@ ltsm_pred_path = 'data/ltsm_season_pred.csv'
 ltsm_seq_pred_path = 'data/ltsm_seq_season_pred.csv'
 past_results_path = 'data/23_24_current_season_prediction_tracker.csv'
 votes_data_path = 'data/voter_pred.csv'
+all_data_path = 'data/new_season_predictions/predictions_combined.csv'
 
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from sklearn.metrics import accuracy_score, mean_absolute_error
 from datetime import datetime
+import matplotlib.pyplot as plt
 import numpy as np
 import openai
 import os
@@ -118,18 +121,20 @@ def merge_data(tree_data, non_tree_data, ltsm_seq_data, ltsm_data):
 
 
 
-def calculate_daily_accuracy(data):
-    data['correct_prediction'] = data['ltsm_seq_PREDICTION'] == data['WL_encoded']
-    daily_accuracy = data.groupby('Date')['correct_prediction'].mean().reset_index()
-    daily_accuracy['Date'] = pd.to_datetime(daily_accuracy['Date'])
-    return daily_accuracy.sort_values(by='Date')
+all_data = pd.read_csv(all_data_path)
+
+# Function to calculate the daily correct percentage
+def calculate_daily_correct_percentage(data, model):
+    data['correct'] = data[f'{model}_PREDICTION'] == data['WL_encoded']
+    daily_correct = data.groupby('Date')['correct'].mean().reset_index()
+    return daily_correct.sort_values('Date')
 
 #*******************************chatbot add on***********************************
 # Initialize session state for messages at the top level to ensure it's always done.
-#st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
+st.session_state.setdefault("messages", [{"role": "system", "content": "Warming up on the court! 🏀 Ready to assist and share some hoops wisdom. Pass the ball, and let's get this conversation rolling!"}])
 
 # Set the OpenAI API key.
-#openai.api_key = st.secrets["openai_key"]
+openai.api_key = st.secrets["openai_key"]
 
 
 # Function to generate initial prompt for the chatbot based on the model's predictions
@@ -188,6 +193,8 @@ def main():
         
         - **Aeolus Forecaster**: A standard LSTM model that provides predictions based on current game data without the sequence memory of past games. It's named after the Greek deity of wind, symbolizing the swift and dynamic nature of its predictions.
         
+        - **Regression Forecaster**: A linear regression model that predicts the outcome of NBA games based on how many points will be scored. This model is named after the type of  Recurrent Neural Network (RNN) that is uses
+                
         Compare these advanced AI predictions with human votes to see if man or machine has the upper hand in predicting the outcomes of NBA games.
     """)
 
@@ -197,7 +204,8 @@ def main():
     non_tree_data = load_non_tree_data(non_tree_pred_path)
     ltsm_data = load_ltsm_data(ltsm_pred_path)
     ltsm_seq_data = load_ltsm_seq_data(ltsm_seq_pred_path)
-    all_data = merge_data(tree_data, non_tree_data, ltsm_data, ltsm_seq_data)
+    #all_data = merge_data(tree_data, non_tree_data, ltsm_data, ltsm_seq_data)
+    all_data = pd.read_csv(all_data_path)
     past_results = load_past_results(past_results_path)
     # Sidebar for navigation
     app_mode = st.sidebar.selectbox("Choose the app mode", ["Man vs Machine", "All Predictions", "Voter Predictions"])
@@ -267,99 +275,87 @@ def main():
         all_data = all_data.reset_index(drop=True)
         st.write(all_data)
 
-    elif app_mode == "Man vs Machine":
-        st.subheader('Past NBA Games and Predictions')
-        past_results = past_results.rename(columns={'GAME_DATE': 'Date'})
-        
-        # Merge past results with predictions
-        past_data_with_predictions = pd.merge(past_results, all_data, on=['Date', 'TEAM_NAME'], how='left')
+    if app_mode == "Man vs Machine":
+        st.subheader('Man vs Machine: Model Performance')
 
-        #filter data to only include games with a ltsm_seq_PREDICTION
-        past_data_with_predictions = past_data_with_predictions.sort_values(by=['Date', 'MATCHUP_ID_x'], ascending=False)
-        past_data_with_predictions = past_data_with_predictions.reset_index(drop=True)
+        models = [
+            "XGBoost", "Decision Tree", "Random Forest",
+            "Gradient Boosting", "AdaBoost", "MLP Classifier",
+            "K-Neighbors Classifier", "SVM", "SGD Classifier",
+            "Ridge Classifier", "Logistic Regression", "ltsm",
+            "ltsm_seq", "linreg_team_point", "linreg_wl"
+        ]
+        accuracies = {}
+        mae_values = {}
 
-        # Only include the columns we want
-        past_data_with_predictions = past_data_with_predictions[['Date', 'MATCHUP', 'TEAM_NAME', 'WL', 'WL_encoded', 'ltsm_PREDICTION', 
-                                                                 'ltsm_seq_PREDICTION', 'voter_predictions']]
+        for model in models:
+            # Filter out NaN values for both predictions and actual results
+            filtered_df = all_data.dropna(subset=['WL_encoded', f"{model}_PREDICTION"])
+            # For the linear regression model, calculate MAE
+            if "linreg_team_point" in model:
+                mae_values[model] = mean_absolute_error(filtered_df['PTS'], filtered_df[f"{model}_PREDICTION"])
+            else:
+                # For classification models, calculate accuracy
+                accuracies[model] = accuracy_score(filtered_df['WL_encoded'], filtered_df[f"{model}_PREDICTION"])
 
+        # Combine the accuracy and MAE dictionaries into a dataframe
+        accuracy_df = pd.DataFrame(list(accuracies.items()), columns=['Model', 'Accuracy'])
+        mae_df = pd.DataFrame(list(mae_values.items()), columns=['Model', 'MAE'])
 
-        # Calculate daily accuracy for each prediction model
-        def calculate_daily_accuracy(data, prediction_column):
-            correct_predictions_column = f'{prediction_column}_correct'
-            data[correct_predictions_column] = data[prediction_column] == data['WL_encoded']
-            daily_accuracy = data.groupby('Date')[correct_predictions_column].mean().reset_index()
-            daily_accuracy['Date'] = pd.to_datetime(daily_accuracy['Date'])
-            daily_accuracy = daily_accuracy.sort_values(by='Date')
-            daily_accuracy['Model'] = prediction_column
-            daily_accuracy['correct_prediction'] = daily_accuracy[correct_predictions_column] * 100  # Convert to percentage
-            return daily_accuracy
+        # Merge the two dataframes on the 'Model' column
+        performance_df = pd.merge(accuracy_df, mae_df, on='Model', how='outer')
 
-        lstm_accuracy = calculate_daily_accuracy(past_data_with_predictions, 'ltsm_PREDICTION')
-        lstm_seq_accuracy = calculate_daily_accuracy(past_data_with_predictions, 'ltsm_seq_PREDICTION')
-        voter_accuracy = calculate_daily_accuracy(past_data_with_predictions, 'voter_predictions')
+        # If you want to display 'linreg' as 'Linear Regression' in your table
+        performance_df['Model'] = performance_df['Model'].replace({
+            'linreg_team_point': 'Linear Regression (Team Points)',
+            'linreg_wl': 'Linear Regression (Win/Loss)',
+            'ltsm': 'Chronos Predictor',
+            'ltsm_seq': 'Aeolus Forecaster'
+        })
+        #change Accuracy column into percentages
+        performance_df['Accuracy'] = performance_df['Accuracy'].map("{:.2%}".format)
 
-        # Combine accuracies into a single DataFrame
-        all_accuracies = pd.concat([lstm_accuracy, lstm_seq_accuracy, voter_accuracy])
+        #change MAE to 2 decimal places
+        performance_df['MAE'] = performance_df['MAE'].map("{:.2f}".format)
 
-        # Filter for the last month's data
-        one_month_ago = datetime.now() - pd.to_timedelta(30, unit='d')
-        all_accuracies = all_accuracies[all_accuracies['Date'] > one_month_ago]
+        # reorder columns so included models come first in the table
+        included_models = ['Chronos Predictor', 'Aeolus Forecaster', 'Linear Regression (Win/Loss)', 'Linear Regression (Team Points)']
+        performance_df = performance_df.reindex(performance_df['Model'].isin(included_models).sort_values(ascending=False).index)
 
-        # Create line chart
-        fig = px.line(all_accuracies, x='Date', y='correct_prediction', color='Model', title='Correct Predictions Over Time', labels={'correct_prediction': 'Accuracy (%)'})
-        fig.update_yaxes(tickvals=[i for i in range(0, 101, 10)], ticktext=[f'{i}%' for i in range(0, 101, 10)])
+        st.write(performance_df)
+
+        included_models = ['ltsm', 'ltsm_seq', 'linreg_wl']
+        all_model_data = pd.DataFrame()
+
+        for model in included_models:
+            model_data = all_data.dropna(subset=['WL_encoded', f"{model}_PREDICTION"])
+            model_data['Model'] = model  # Add a column for the model name
+            daily_correct_percentage = calculate_daily_correct_percentage(model_data, model)
+            daily_correct_percentage['Model'] = model  # Add a column for the model name
+            all_model_data = pd.concat([all_model_data, daily_correct_percentage], ignore_index=True)
+
+        # Using Plotly to create an interactive plot
+        fig = px.scatter(all_model_data, x='Date', y='correct', color='Model',
+                         title='Daily Correct Percentage of Included Models',
+                         labels={'correct': 'Correct Percentage'},
+                         hover_data={'Model': True})
+
+        fig.update_traces(mode='lines+markers')
+        fig.update_layout(legend_title_text='Model')
+        fig.update_yaxes(tickformat=".1%")  # Format the y-axis ticks as percentages
+
+        # Display the plot in Streamlit
         st.plotly_chart(fig)
 
-        # Update ltsm_PREDICTION, ltsm_seq_PREDICTION, and voter_predictions to 'W' if x == 0, 'L' if x == 1
-        past_data_with_predictions['ltsm_PREDICTION'] = past_data_with_predictions['ltsm_PREDICTION'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
-        past_data_with_predictions['ltsm_seq_PREDICTION'] = past_data_with_predictions['ltsm_seq_PREDICTION'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
-        past_data_with_predictions['voter_predictions'] = past_data_with_predictions['voter_predictions'].apply(lambda x: 'W' if x == 0 else ('L' if x == 1 else x))
-        #drop WL_encoded column
-        past_data_with_predictions = past_data_with_predictions.drop(columns=['WL_encoded'])
-
-        # Calculate accuracy for LSTM predictions
-        correct_lstm = sum(past_data_with_predictions['ltsm_PREDICTION'] == past_data_with_predictions['WL'])
-        total_lstm = len(past_data_with_predictions['ltsm_PREDICTION'].dropna())
-        accuracy_lstm = round((correct_lstm / total_lstm * 100) if total_lstm != 0 else 0, 2)
-
-        # Calculate accuracy for LSTM sequence predictions
-        correct_lstm_seq = sum(past_data_with_predictions['ltsm_seq_PREDICTION'] == past_data_with_predictions['WL'])
-        total_lstm_seq = len(past_data_with_predictions['ltsm_seq_PREDICTION'].dropna())
-        accuracy_lstm_seq = round((correct_lstm_seq / total_lstm_seq * 100) if total_lstm_seq != 0 else 0, 2)
-
-        # Calculate accuracy for voter predictions
-        correct_voter = sum(past_data_with_predictions['voter_predictions'] == past_data_with_predictions['WL'])
-        total_voter = len(past_data_with_predictions['voter_predictions'].dropna())
-        accuracy_voter = round((correct_voter / total_voter * 100) if total_voter != 0 else 0, 2)
-
-        #divide by 2 because there are two teams per game without decimals
-        total_lstm_seq = total_lstm_seq/2
-        total_lstm = total_lstm/2
-        total_voter = total_voter/2
-        
-        # In the Man vs Machine section, where you describe the accuracy
-        st.subheader('Model Accuracy Insights')
-        st.write(f"**Chronos Predictor** (LSTM with 5 Game Memory) Accuracy: {accuracy_lstm_seq}% out of {total_lstm_seq} games")
-        st.write(f"**Aeolus Forecaster** (Standard LSTM) Accuracy: {accuracy_lstm}% out of {total_lstm} games")
-        st.write(f"**Voter Insights** (Human Predictions) Accuracy: {accuracy_voter}% out of {total_voter} games")
-        
-        #rename ltsm_seq_prediction to Chrons Predictor and ltsm_prediction to Aeolus Forecaster
-        past_data_with_predictions = past_data_with_predictions.rename(columns={'ltsm_seq_PREDICTION': 'Chronos Predictor'
-                                                                                , 'ltsm_PREDICTION': 'Aeolus Forecaster'
-                                                                                , 'voter_predictions': 'Voter Insights'
-                                                                                ,'ltsm_seq_PREDICTION_correct': 'Chronos Predictor Correct'
-                                                                                , 'ltsm_PREDICTION_correct': 'Aeolus Forecaster Correct'
-                                                                                , 'voter_predictions_correct': 'Voter Insights Correct'})
-        
-        # Display predictions and results
-        st.write(past_data_with_predictions)
-
         # Generate initial prompt for the chatbot
-        #initial_prompt = generate_initial_prompt(past_data_with_predictions)
+        initial_prompt = generate_initial_prompt(performance_df)
 
         # Display the chatbot in the sidebar
-        #chatbot_sidebar(initial_prompt)
+        chatbot_sidebar(initial_prompt)
         
+
+# Run the main function
 if __name__ == "__main__":
     main()
+
 
